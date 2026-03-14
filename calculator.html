@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kangaroo DB Calculator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #0a0a1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 30px;
+  }
+  h1 {
+    text-align: center;
+    color: #00d4ff;
+    margin-bottom: 30px;
+    font-size: 28px;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 30px;
+  }
+  .panel {
+    background: #12122a;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+  .panel h2 {
+    color: #00d4ff;
+    margin-bottom: 20px;
+    font-size: 18px;
+    border-bottom: 1px solid #2a2a4a;
+    padding-bottom: 10px;
+  }
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #8899aa;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    background: #1a1a3a;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 15px;
+    font-family: 'Consolas', monospace;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #00d4ff, #0088cc);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    margin-top: 10px;
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+  }
+  .btn:active { transform: translateY(0); }
+
+  /* Results */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .result-card {
+    background: #1a1a3a;
+    border: 1px solid #2a2a4a;
+    border-radius: 10px;
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
+  .result-card:hover {
+    border-color: #00d4ff;
+  }
+  .result-card .label {
+    font-size: 12px;
+    color: #667788;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .result-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #00d4ff;
+    font-family: 'Consolas', monospace;
+  }
+  .result-card .detail {
+    font-size: 12px;
+    color: #556677;
+    margin-top: 4px;
+  }
+  .result-card.highlight {
+    border-color: #00ff88;
+  }
+  .result-card.highlight .value {
+    color: #00ff88;
+  }
+  .result-card.warning {
+    border-color: #ffaa00;
+  }
+  .result-card.warning .value {
+    color: #ffaa00;
+  }
+  .result-card.full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* Command section */
+  .command-box {
+    background: #0a0a1a;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 16px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    color: #00ff88;
+    word-break: break-all;
+    cursor: pointer;
+    position: relative;
+  }
+  .command-box:hover {
+    border-color: #00d4ff;
+  }
+  .command-box .copy-hint {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    font-size: 10px;
+    color: #556677;
+  }
+  .command-box.copied .copy-hint {
+    color: #00ff88;
+  }
+
+  /* Comparison table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .compare-table th {
+    background: #1a1a3a;
+    color: #00d4ff;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #2a2a4a;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .compare-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #1a1a3a;
+    font-family: 'Consolas', monospace;
+  }
+  .compare-table tr:hover {
+    background: #1a1a3a;
+  }
+  .compare-table .current {
+    background: rgba(0, 212, 255, 0.1);
+    font-weight: bold;
+  }
+
+  /* Extend section */
+  .extend-section {
+    margin-top: 20px;
+  }
+  .extend-section h3 {
+    color: #ffaa00;
+    margin-bottom: 12px;
+    font-size: 15px;
+  }
+
+  .info-text {
+    font-size: 12px;
+    color: #556677;
+    margin-top: 4px;
+  }
+
+  .separator {
+    border: none;
+    border-top: 1px solid #2a2a4a;
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Kangaroo DB Calculator</h1>
+
+<div class="container">
+  <!-- Input Panel -->
+  <div class="panel">
+    <h2>Parameters</h2>
+
+    <div class="form-group">
+      <label>Range (bits)</label>
+      <div class="form-row">
+        <div>
+          <input type="number" id="rangeLow" value="76" placeholder="Low">
+          <div class="info-text">Low bit</div>
+        </div>
+        <div>
+          <input type="number" id="rangeHigh" value="77" placeholder="High">
+          <div class="info-text">High bit</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Quality</label>
+      <select id="quality">
+        <option value="db75">Same as DB 75 default</option>
+        <option value="2x">2x DB 75</option>
+        <option value="4x">4x DB 75</option>
+        <option value="custom">Custom -n</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="customNGroup" style="display:none">
+      <label>Custom -n (entries)</label>
+      <input type="text" id="customN" placeholder="e.g. 536870912">
+    </div>
+
+    <div class="form-group">
+      <label>Global bits (-g)</label>
+      <div class="form-row">
+        <input type="number" id="globalBits" value="16" min="10" max="24">
+        <select id="globalPreset" onchange="document.getElementById('globalBits').value=this.value">
+          <option value="16">16 (default)</option>
+          <option value="17">17 (2x DP value)</option>
+          <option value="18">18 (4x DP value)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Workers / Batch</label>
+      <div class="form-row">
+        <div>
+          <input type="number" id="workers" value="384">
+          <div class="info-text">-w workers</div>
+        </div>
+        <div>
+          <input type="number" id="batch" value="128">
+          <div class="info-text">-b batch</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Speed (M steps/s)</label>
+      <input type="number" id="speed" value="1530" step="10">
+      <div class="info-text">Your measured speed</div>
+    </div>
+
+    <hr class="separator">
+
+    <div class="form-group">
+      <label>Extend: target key bits</label>
+      <input type="number" id="extendBits" value="85" placeholder="e.g. 85, 95, 135">
+      <div class="info-text">For estimating extend solve time</div>
+    </div>
+
+    <div class="form-group">
+      <label>Solve speed (M steps/s)</label>
+      <input type="number" id="solveSpeed" value="219" step="10">
+      <div class="info-text">kangaroo_wild speed</div>
+    </div>
+
+    <button class="btn" onclick="calculate()">Calculate</button>
+  </div>
+
+  <!-- Results Panel -->
+  <div class="panel">
+    <h2>Results</h2>
+    <div id="results"></div>
+  </div>
+</div>
+
+<script>
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes.toFixed(1) + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  if (bytes < 1024*1024*1024) return (bytes/(1024*1024)).toFixed(1) + ' MB';
+  if (bytes < 1024*1024*1024*1024) return (bytes/(1024*1024*1024)).toFixed(2) + ' GB';
+  return (bytes/(1024*1024*1024*1024)).toFixed(2) + ' TB';
+}
+
+function formatTime(seconds) {
+  if (seconds < 60) return seconds.toFixed(1) + 's';
+  if (seconds < 3600) return (seconds/60).toFixed(1) + ' min';
+  if (seconds < 86400) return (seconds/3600).toFixed(1) + ' ore';
+  if (seconds < 86400*365) return (seconds/86400).toFixed(1) + ' zile';
+  return (seconds/(86400*365)).toFixed(1) + ' ani';
+}
+
+function formatNumber(n) {
+  if (n < 1e6) return n.toLocaleString();
+  if (n < 1e9) return (n/1e6).toFixed(1) + 'M';
+  if (n < 1e12) return (n/1e9).toFixed(2) + 'B';
+  if (n < 1e15) return (n/1e12).toFixed(2) + 'T';
+  return n.toExponential(2);
+}
+
+function pow2(exp) {
+  if (exp <= 52) return Math.pow(2, exp);
+  // For large exponents, use BigInt-like approach
+  return Math.pow(2, exp);
+}
+
+function log2(n) {
+  return Math.log2(n);
+}
+
+function calculate() {
+  const rangeLow = parseInt(document.getElementById('rangeLow').value);
+  const rangeHigh = parseInt(document.getElementById('rangeHigh').value);
+  const g = parseInt(document.getElementById('globalBits').value);
+  const quality = document.getElementById('quality').value;
+  const workers = parseInt(document.getElementById('workers').value);
+  const batch = parseInt(document.getElementById('batch').value);
+  const speed = parseFloat(document.getElementById('speed').value) * 1e6;
+  const extendBits = parseInt(document.getElementById('extendBits').value);
+  const solveSpeed = parseFloat(document.getElementById('solveSpeed').value) * 1e6;
+
+  // Calculate range
+  const rangeBits = rangeHigh > rangeLow ? rangeHigh - 1 : rangeHigh; // effective search bits
+  const searchSpaceBits = rangeLow === 0 ? rangeHigh : rangeHigh - 1; // 0-75 = 2^75, 76-77 = 2^76
+
+  // Calculate N (entries)
+  let N;
+  const db75_n = pow2(29); // DB75 default
+  const db75_range = 75;
+
+  if (quality === 'custom') {
+    N = parseFloat(document.getElementById('customN').value);
+  } else {
+    // Same quality as DB75: density = 2^29 / 2^75 = 2^(-46)
+    // N = 2^(searchSpaceBits - 46)
+    let base_n = pow2(searchSpaceBits - 46);
+    if (quality === '2x') base_n *= 2;
+    if (quality === '4x') base_n *= 4;
+    N = Math.round(base_n);
+  }
+
+  const N_bits = log2(N);
+
+  // dist_bytes estimation (roughly ceil((searchSpaceBits + g) / 8) - some truncation)
+  const distBytes = Math.max(8, Math.min(16, Math.ceil(searchSpaceBits / 8)));
+
+  // Hash table
+  const htSlots = N * 8;
+  const htBytesPerSlot = 32;
+  const htBytes = htSlots * htBytesPerSlot;
+
+  // Output files
+  const tameDbBytes = N * distBytes;
+  const fpBytes = N * 4;
+  const totalFileBytes = tameDbBytes + fpBytes;
+
+  // Time estimation (scored = 3x)
+  const totalSteps = 3 * N * pow2(g);
+  const timeSeconds = totalSteps / speed;
+
+  // Extend calculations
+  let extendPartitions = 0;
+  let extendTimePerKey = 0;
+  const extendSearchBits = extendBits - 1; // e.g., 85 -> key in 84-85, search space 2^84
+
+  if (extendBits > 0) {
+    const dbRangeBits = searchSpaceBits;
+    if (extendSearchBits > dbRangeBits) {
+      extendPartitions = pow2(extendSearchBits - dbRangeBits);
+    } else {
+      extendPartitions = 1;
+    }
+
+    // Effective density
+    const effectiveCoverage = N * pow2(g);
+    const searchSpace = pow2(dbRangeBits);
+    // Median steps per partition solve ~ searchSpace / effectiveCoverage * medianFactor
+    const stepsPerPartition = (searchSpace / effectiveCoverage) * pow2(g) * 0.4 * pow2(g);
+
+    // Simpler estimation: DB75 default solves 74-75 in ~354M steps median
+    // Scale: steps proportional to range / (N * 2^g)
+    const db75Steps = 354e6;
+    const db75Density = pow2(29) * pow2(16); // N * 2^g for DB75
+    const myDensity = N * pow2(g);
+    const myRange = pow2(dbRangeBits);
+    const db75Range = pow2(74);
+
+    const stepsPerSolve = db75Steps * (myRange / db75Range) * (db75Density / myDensity);
+    const timePerSolve = stepsPerSolve / solveSpeed;
+
+    extendTimePerKey = timePerSolve * extendPartitions;
+  }
+
+  // Quality vs DB75
+  const myDensityRatio = (N * pow2(g)) / (pow2(29) * pow2(16));
+  const qualityVsDb75 = myDensityRatio;
+
+  // Command
+  const cmd = `./tame_phase -n ${N} -r ${rangeLow} ${rangeHigh} -g ${g} -w ${workers} -b ${batch} --scored --checkpoint 30`;
+  const solveCmd = extendPartitions > 1
+    ? `./kangaroo_wild -R ${rangeHigh} -G ${g} -w ${workers} -b 20 extend <pubkey> ${extendBits-1} ${extendBits}`
+    : `./kangaroo_wild -R ${rangeHigh} -G ${g} -w ${workers} -b 20 public_keys.txt ${rangeLow} ${rangeHigh}`;
+
+  // Render
+  let html = `
+    <div class="results-grid">
+      <div class="result-card">
+        <div class="label">Entries (-n)</div>
+        <div class="value">${formatNumber(N)}</div>
+        <div class="detail">2^${N_bits.toFixed(1)}</div>
+      </div>
+      <div class="result-card ${qualityVsDb75 >= 2 ? 'highlight' : ''}">
+        <div class="label">Quality vs DB75</div>
+        <div class="value">${qualityVsDb75.toFixed(1)}x</div>
+        <div class="detail">${qualityVsDb75 > 1 ? 'Better' : qualityVsDb75 === 1 ? 'Equal' : 'Weaker'} than default</div>
+      </div>
+      <div class="result-card ${htBytes > 900e9 ? 'warning' : ''}">
+        <div class="label">Hash Table (RAM)</div>
+        <div class="value">${formatBytes(htBytes)}</div>
+        <div class="detail">${formatNumber(htSlots)} slots</div>
+      </div>
+      <div class="result-card">
+        <div class="label">Total Files</div>
+        <div class="value">${formatBytes(totalFileBytes)}</div>
+        <div class="detail">tame_db: ${formatBytes(tameDbBytes)} | fp: ${formatBytes(fpBytes)}</div>
+      </div>
+      <div class="result-card">
+        <div class="label">Total Steps</div>
+        <div class="value">${formatNumber(totalSteps)}</div>
+        <div class="detail">3 x ${formatNumber(N)} x 2^${g} (scored)</div>
+      </div>
+      <div class="result-card ${timeSeconds > 86400*30 ? 'warning' : ''}">
+        <div class="label">Generation Time</div>
+        <div class="value">${formatTime(timeSeconds)}</div>
+        <div class="detail">at ${(speed/1e6).toFixed(0)}M steps/s</div>
+      </div>
+    </div>`;
+
+  // Extend results
+  if (extendBits > 0) {
+    const maxPart = 1048576;
+    const partClass = extendPartitions > maxPart ? 'warning' : extendPartitions <= 65536 ? 'highlight' : '';
+    const partNote = extendPartitions > maxPart ? 'Exceeds MAX_PARTITIONS!' : extendPartitions <= 65536 ? 'OK (default limit)' : `OK (needs MAX_PARTITIONS >= ${formatNumber(extendPartitions)})`;
+
+    html += `
+    <div class="extend-section">
+      <h3>Extend to ${extendBits}-bit keys</h3>
+      <div class="results-grid">
+        <div class="result-card ${partClass}">
+          <div class="label">Partitions</div>
+          <div class="value">${formatNumber(extendPartitions)}</div>
+          <div class="detail">${partNote}</div>
+        </div>
+        <div class="result-card ${extendTimePerKey > 86400 ? 'warning' : 'highlight'}">
+          <div class="label">Time per key</div>
+          <div class="value">${formatTime(extendTimePerKey)}</div>
+          <div class="detail">at ${(solveSpeed/1e6).toFixed(0)}M steps/s</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Command
+  html += `
+    <hr class="separator">
+    <h3 style="color:#00d4ff; margin-bottom:10px; font-size:14px;">Generate Command</h3>
+    <div class="command-box" onclick="copyCmd(this)">
+      <span class="copy-hint">click to copy</span>
+      ${cmd}
+    </div>
+    <h3 style="color:#00d4ff; margin-bottom:10px; margin-top:16px; font-size:14px;">Solve Command</h3>
+    <div class="command-box" onclick="copyCmd(this)">
+      <span class="copy-hint">click to copy</span>
+      ${solveCmd}
+    </div>`;
+
+  // Comparison table
+  html += `
+    <hr class="separator">
+    <h3 style="color:#00d4ff; margin-bottom:10px; font-size:14px;">Quick Comparison</h3>
+    <table class="compare-table">
+      <tr>
+        <th>DB</th>
+        <th>Entries</th>
+        <th>g</th>
+        <th>RAM</th>
+        <th>Files</th>
+        <th>Gen Time</th>
+        <th>Parts @${extendBits}b</th>
+        <th>Solve @${extendBits}b</th>
+      </tr>`;
+
+  const configs = [
+    { name: 'DB75 def', n: pow2(29), g: 16, range: 75 },
+    { name: 'DB75 2^30', n: pow2(30), g: 16, range: 75 },
+    { name: 'DB75 2^31', n: pow2(31), g: 16, range: 75 },
+    { name: 'DB76 g16', n: pow2(30), g: 16, range: 76 },
+    { name: 'DB77 g17', n: pow2(31), g: 17, range: 77 },
+    { name: `DB${rangeHigh} g${g}`, n: N, g: g, range: rangeHigh },
+  ];
+
+  // Remove duplicate if current matches one above
+  const seen = new Set();
+  const uniqueConfigs = configs.filter(c => {
+    const key = `${c.name}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  for (const cfg of uniqueConfigs) {
+    const cfgHt = cfg.n * 8 * 32;
+    const cfgDist = Math.max(8, Math.min(16, Math.ceil(cfg.range / 8)));
+    const cfgFiles = cfg.n * cfgDist + cfg.n * 4;
+    const cfgSteps = 3 * cfg.n * pow2(cfg.g);
+    const cfgTime = cfgSteps / speed;
+    const cfgSearchBits = cfg.range > 1 ? cfg.range : cfg.range;
+    const cfgExtSearchBits = extendBits - 1;
+    const cfgParts = cfgExtSearchBits > cfgSearchBits ? pow2(cfgExtSearchBits - cfgSearchBits) : 1;
+
+    const db75Dens = pow2(29) * pow2(16);
+    const cfgDens = cfg.n * pow2(cfg.g);
+    const cfgRange = pow2(cfgSearchBits > 1 ? cfgSearchBits - 1 : cfgSearchBits);
+    const cfgSolveSteps = 354e6 * (cfgRange / pow2(74)) * (db75Dens / cfgDens);
+    const cfgSolveTime = (cfgSolveSteps / solveSpeed) * cfgParts;
+
+    const isCurrent = (cfg.n === N && cfg.g === g && cfg.range === rangeHigh);
+
+    html += `
+      <tr class="${isCurrent ? 'current' : ''}">
+        <td>${cfg.name}</td>
+        <td>2^${log2(cfg.n).toFixed(0)}</td>
+        <td>${cfg.g}</td>
+        <td>${formatBytes(cfgHt)}</td>
+        <td>${formatBytes(cfgFiles)}</td>
+        <td>${formatTime(cfgTime)}</td>
+        <td>${formatNumber(cfgParts)}</td>
+        <td>${formatTime(cfgSolveTime)}</td>
+      </tr>`;
+  }
+
+  html += `</table>`;
+
+  document.getElementById('results').innerHTML = html;
+}
+
+function copyCmd(el) {
+  const text = el.textContent.replace('click to copy', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add('copied');
+    el.querySelector('.copy-hint').textContent = 'copied!';
+    setTimeout(() => {
+      el.classList.remove('copied');
+      el.querySelector('.copy-hint').textContent = 'click to copy';
+    }, 2000);
+  });
+}
+
+// Show/hide custom N input
+document.getElementById('quality').addEventListener('change', function() {
+  document.getElementById('customNGroup').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+// Auto-calculate on load
+calculate();
+</script>
+</body>
+</html>
